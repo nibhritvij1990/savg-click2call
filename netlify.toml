@@ -1,5 +1,5 @@
 [build]
-  command = "npm --workspace library run build && npm --workspace examples/vanilla run build"
+  command = "npm --workspace library run build && npm --workspace examples/vanilla run build && cp -f library/dist/click2call.* examples/vanilla/dist/"
   publish = "examples/vanilla/dist"
 
 [[headers]]
