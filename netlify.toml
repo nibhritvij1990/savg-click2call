@@ -1,0 +1,15 @@
+[build]
+  command = "npm --workspace library run build && npm --workspace examples/vanilla run build"
+  publish = "examples/vanilla/dist"
+
+[[headers]]
+  for = "/click2call.*.js"
+  [headers.values]
+    cache-control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    cache-control = "public, max-age=31536000, immutable"
+
+

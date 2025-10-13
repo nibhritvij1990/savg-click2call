@@ -1,0 +1,85 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Savg Click2Call Demo</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 2rem; }
+      .row { display: flex; gap: 1rem; align-items: center; margin-bottom: .75rem; }
+      .col { display: flex; flex-direction: column; gap: .25rem; }
+      #logs { height: 200px; overflow: auto; background: #111; color: #0f0; padding: .5rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+      button { padding: .5rem .75rem; }
+      input, select { padding: .5rem; }
+    </style>
+  </head>
+  <body>
+    <h1>Savg Click2Call</h1>
+    <div class="row">
+      <div class="col">
+        <label>SBC WSS URL</label>
+        <input id="sbcWssUrl" placeholder="wss://your-sbc.example.com" />
+      </div>
+      <div class="col">
+        <label>SIP Domain</label>
+        <input id="sipDomain" placeholder="example.com" />
+      </div>
+      <div class="col">
+        <label>ICE Servers (JSON or comma list)</label>
+        <input id="iceServers" placeholder='[{"urls":"stun:stun.l.google.com:19302"}]' />
+      </div>
+      <div class="col">
+        <label>Bot ID</label>
+        <input id="botId" placeholder="st-..." />
+      </div>
+      <div class="col">
+        <label>Phone Number</label>
+        <input id="phoneNumber" placeholder="+15551234567" />
+      </div>
+      <div class="col">
+        <label>X-CTC-Context (optional)</label>
+        <input id="context" placeholder="context" />
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        <label>Mic</label>
+        <select id="mic"></select>
+      </div>
+      <div class="col">
+        <label>Speaker</label>
+        <select id="speaker"></select>
+      </div>
+      <div class="col">
+        <label>Destination (optional To override)</label>
+        <input id="to" placeholder="sip:user@example.com" />
+      </div>
+    </div>
+    <div class="row">
+      <button id="btnCall">Call</button>
+      <button id="btnHangup">Hang Up</button>
+      <button id="btnMute">Mute</button>
+      <button id="btnUnmute">Unmute</button>
+      <button id="btnHold">Hold</button>
+      <button id="btnResume">Resume</button>
+      <button id="btnDTMF">Send DTMF 1</button>
+    </div>
+    <div class="row"><div id="status">Idle</div></div>
+    <div class="row"><div id="logs"></div></div>
+
+    <script src="/ac_webrtc.min.js"></script>
+    <script>
+      // Bridge: expose UA under a predictable global for the wrapper
+      (function(){
+        try {
+          if (!window.AudioCodesUA && window.JsSIP && window.JsSIP.AudioCodesUA) {
+            window.AudioCodesUA = window.JsSIP.AudioCodesUA;
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <script type="module" src="/app.js"></script>
+  </body>
+  </html>
+
+

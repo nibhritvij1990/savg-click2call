@@ -1,0 +1,16 @@
+{
+  "name": "savg-click2call-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "library",
+    "examples/vanilla"
+  ],
+  "scripts": {
+    "build": "npm --workspace library run build",
+    "dev": "npm --workspace examples/vanilla run dev",
+    "dev:https": "npm --workspace examples/vanilla run dev:https"
+  }
+}
+
+
