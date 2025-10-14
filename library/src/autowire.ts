@@ -97,7 +97,7 @@ function showOverlay(opts: { number: string; botLabel: string; onDTMF: (d: strin
         <div class="savg-c2c-card">
           <div class="savg-c2c-title">
             <div class="savg-c2c-meta"><span class="savg-c2c-timer">00:18</span></div>
-            <div class="savg-c2c-meta"><span class="savg-c2c-number">+12566002038</span></div>
+            <div class="savg-c2c-meta"><span class="savg-c2c-number">Connecting...</span></div>
             <div class="savg-c2c-meta"><span class="savg-c2c-bot">data-botName</span></div>
           </div>
           <div class="savg-c2c-wave" aria-hidden="true">
@@ -151,15 +151,7 @@ function showOverlay(opts: { number: string; botLabel: string; onDTMF: (d: strin
   document.body.appendChild(overlayRoot);
   (overlayRoot.querySelector('.savg-c2c-number') as HTMLElement).textContent = opts.number || 'Unknown';
   (overlayRoot.querySelector('.savg-c2c-bot') as HTMLElement).textContent = opts.botLabel || 'Bot';
-  const keypad = overlayRoot.querySelector('.savg-c2c-keypad') as HTMLElement;
-  const keys = ['1','2','3','4','5','6','7','8','9','*','0','#'];
-  keys.forEach(k => {
-    const b = document.createElement('button');
-    b.className = 'savg-c2c-btn';
-    b.textContent = k;
-    b.addEventListener('click', () => opts.onDTMF(k));
-    keypad.appendChild(b);
-  });
+  
   const muteBtn = overlayRoot.querySelector('.savg-c2c-mute') as HTMLButtonElement;
   muteBtn.addEventListener('click', () => opts.onMuteToggle());
   const endBtn = overlayRoot.querySelector('.savg-c2c-hangup') as HTMLButtonElement;
