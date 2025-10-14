@@ -200,7 +200,7 @@ function makeCacheKey(cfg: ClientConfig): string {
 }
 
 export function autoWireCallButtons(options?: AutoWireOptions) {
-  const selector = options?.selector || '.callBtn';
+  const selector = options?.selector || '.click2CallBtn';
   const handler = async (ev: Event) => {
     const target = ev.target as Element | null;
     if (!target) return;
