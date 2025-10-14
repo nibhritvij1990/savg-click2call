@@ -17,7 +17,7 @@ function ensureOverlayStyles() {
   const style = document.createElement('style');
   style.id = 'savg-c2c-styles';
   style.textContent = `
-  .savg-c2c-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; z-index: 99999; }
+  .savg-c2c-overlay { position: fixed; inset: 5svh 15svw; display: flex; align-items: center; justify-content: center; z-index: 99999; }
   .savg-c2c-card-wrapper { width: 404px; height: 862px; position: relative; z-index: 1; }
   .savg-c2c-card { background: #1c1c1e; color: #e5e5e5; border-radius: 24px; height: 862px; width: 400px; margin: 0 2px; padding: 80px 0 0 0; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; box-shadow: inset 0 0 12px #8d8d86, inset 0 7px 0 3px #1077d7, inset 0 -6px 0 3px #1077d7; }
   .savg-c2c-title { display: flex; flex-direction: column; gap: 6px; }
@@ -51,6 +51,12 @@ function ensureOverlayStyles() {
   .device-sensors::after { background: linear-gradient(to bottom, #121212, #666661); border-radius: 0 0 50px 50px; height: 4px; left: 50%; margin-left: -103px; top: -18px; width: 206px; content: ""; position: absolute; }
   .device-btns { background: #16589b; height: 102px; position: absolute; right: 0; top: 306px; width: 3px; }
   .device-power { background: #16589b; height: 58px; position: absolute; right: 0; top: 194px; width: 3px; }
+
+  .savg-c2c-overlay { box-shadow: 0 6px 6px rgba(0, 0, 0, 0.2), 0 0 20px rgba(0, 0, 0, 0.1), 0 -1px 1px 0 white, 0 1px 1px 0 white, 1px 1px 1px 0 rgba(0, 0, 0, 0.2), -1px 0 1px 0 rgba(0, 0, 0, 0.2), 0 0 10px rgba(0, 0, 0, 0.1); border-radius: 24px; }
+  .liquidGlass-effect { position: absolute; z-index: 0; inset: 0; backdrop-filter: blur(2px); filter: url(#glass-distortion); overflow: hidden; isolation: isolate; border-radius: inherit; }
+  .liquidGlass-tint { z-index: 1; position: absolute; inset: 0; background: rgba(255, 255, 255, 0.25); border-radius: inherit; }
+  .liquidGlass-shine { position: absolute; inset: 0; z-index: 2; overflow: hidden; box-shadow: inset 2px 2px 1px 0 rgba(255, 255, 255, 0.5), inset -1px -1px 1px 1px rgba(255, 255, 255, 0.5); border-radius: inherit; }
+  .liquidGlass-text { z-index: 3; position: relative; border-radius: inherit; }
   `;
   document.head.appendChild(style);
 }
@@ -83,6 +89,10 @@ function showOverlay(opts: { number: string; botLabel: string; onDTMF: (d: strin
   overlayRoot.className = 'savg-c2c-overlay';
   overlayRoot.innerHTML = `
     <div class="savg-c2c-overlay">
+      <div class="liquidGlass-effect"></div>
+      <div class="liquidGlass-tint"></div>
+      <div class="liquidGlass-shine"></div>
+      <div class="liquidGlass-text">
       <div class="savg-c2c-card-wrapper">
         <div class="savg-c2c-card">
           <div class="savg-c2c-title">
@@ -107,20 +117,37 @@ function showOverlay(opts: { number: string; botLabel: string; onDTMF: (d: strin
               <button class="savg-c2c-btn" data-key="*"><span class="n">*</span></button>
               <button class="savg-c2c-btn" data-key="0"><span class="n">0</span><span class="l">+</span></button>
               <button class="savg-c2c-btn" data-key="#"><span class="n">#</span></button>
-            </div>
-            <div class="savg-c2c-actions">
-              <button id="btnMute" class="control savg-c2c-btn savg-c2c-mute" title="Mute/Unmute" aria-label="Mute/Unmute"><i class="bi bi-mic" aria-hidden="true"></i></button>
-              <button id="btnEnd" class="hangup savg-c2c-btn savg-c2c-danger savg-c2c-hangup" title="End Call" aria-label="End call"><i class="bi bi-telephone-x" aria-hidden="true"></i></button>
+              </div>
+              <div class="savg-c2c-actions">
+                <button id="btnMute" class="control savg-c2c-btn savg-c2c-mute" title="Mute/Unmute" aria-label="Mute/Unmute"><i class="bi bi-mic" aria-hidden="true"></i></button>
+                <button id="btnEnd" class="hangup savg-c2c-btn savg-c2c-danger savg-c2c-hangup" title="End Call" aria-label="End call"><i class="bi bi-telephone-x" aria-hidden="true"></i></button>
+              </div>
             </div>
           </div>
+          <div class="device-stripe"></div>
+          <div class="device-header"></div>
+          <div class="device-sensors"></div>
+          <div class="device-btns"></div>
+          <div class="device-power"></div>
         </div>
-        <div class="device-stripe"></div>
-        <div class="device-header"></div>
-        <div class="device-sensors"></div>
-        <div class="device-btns"></div>
-        <div class="device-power"></div>
       </div>
-    </div>`;
+    </div>
+    <svg style="display: none">
+      <filter id="glass-distortion" x="0%" y="0%" width="100%" height="100%" filterUnits="objectBoundingBox">
+        <feTurbulence type="fractalNoise" baseFrequency="0.01 0.01" numOctaves="1" seed="5" result="turbulence" />
+        <feComponentTransfer in="turbulence" result="mapped">
+        <feFuncR type="gamma" amplitude="1" exponent="10" offset="0.5" />
+        <feFuncG type="gamma" amplitude="0" exponent="1" offset="0" />
+        <feFuncB type="gamma" amplitude="0" exponent="1" offset="0.5" />
+        </feComponentTransfer>
+        <feGaussianBlur in="turbulence" stdDeviation="3" result="softMap" />
+        <feSpecularLighting in="softMap" surfaceScale="5" specularConstant="1" specularExponent="100" lighting-color="white" result="specLight">
+        <fePointLight x="-200" y="-200" z="300" />
+        </feSpecularLighting>
+        <feComposite in="specLight" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="litImage" />
+        <feDisplacementMap in="SourceGraphic" in2="softMap" scale="150" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    </svg>`;
   document.body.appendChild(overlayRoot);
   (overlayRoot.querySelector('.savg-c2c-number') as HTMLElement).textContent = opts.number || 'Unknown';
   (overlayRoot.querySelector('.savg-c2c-bot') as HTMLElement).textContent = opts.botLabel || 'Bot';
