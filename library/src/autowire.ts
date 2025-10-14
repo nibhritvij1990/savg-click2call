@@ -42,7 +42,8 @@ function ensureOverlayStyles() {
   .savg-c2c-mute, .savg-c2c-hangup { padding: 16px; font-size: 20px; }
   .savg-c2c-danger { background: #c23616; border-color: #c23616; grid-column: 2 / 4; }
   .savg-c2c-danger:hover { background: #d63031; border-color: #d63031; }
-  .savg-c2c-muted { background: #444; }
+  .savg-c2c-muted { background: #999; color: #3a3a3c; border-radius: 16px;}
+  .savg-c2c-muted:hover { background: #777; }
   .device-stripe::before { background: #16589b; bottom: 0; content: ""; height: 9px; left: 50%; margin-left: 40px; position: absolute; width: 11px; }
   .device-stripe::after { background: linear-gradient(to top, #121212, #666661); border-radius: 50px 50px 0 0; bottom: 0; content: ""; height: 2px; left: 50%; margin-left: -22px; position: absolute; width: 44px; }
   .device-header { background: linear-gradient(to bottom, #8d8d86 0, #16589b 30%, #16589b 100%); height: 10px; left: 50%; margin-left: -147px; position: absolute; top: 0; width: 294px; }
@@ -172,7 +173,10 @@ function showOverlay(opts: { number: string; botLabel: string; onDTMF: (d: strin
   };
   const setMuted = (m: boolean) => {
     overlayMuted = m;
-    muteBtn.textContent = m ? 'Unmute' : 'Mute';
+    const icon = muteBtn.querySelector('i');
+    if (icon) (icon as HTMLElement).className = m ? 'bi bi-mic-mute' : 'bi bi-mic';
+    muteBtn.setAttribute('aria-label', m ? 'Unmute' : 'Mute');
+    muteBtn.title = m ? 'Unmute' : 'Mute';
     muteBtn.classList.toggle('savg-c2c-muted', m);
   };
   return { startTimer, stop, setMuted };
