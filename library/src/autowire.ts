@@ -7,6 +7,104 @@ type AutoWireOptions = {
 
 const clientCache: Map<string, Client> = new Map();
 const inFlightButtons: WeakSet<Element> = new WeakSet();
+let overlayRoot: HTMLElement | null = null;
+let overlayTimerId: number | null = null;
+let overlayStartTs: number | null = null;
+let overlayMuted = false;
+
+function ensureOverlayStyles() {
+  if (document.getElementById('savg-c2c-styles')) return;
+  const style = document.createElement('style');
+  style.id = 'savg-c2c-styles';
+  style.textContent = `
+  .savg-c2c-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:99999}
+  .savg-c2c-card{background:#111;color:#fff;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.35);width:min(92vw,380px);padding:20px;display:flex;flex-direction:column;gap:14px;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  .savg-c2c-title{display:flex;flex-direction:column;gap:6px}
+  .savg-c2c-row{display:flex;align-items:center;justify-content:space-between}
+  .savg-c2c-wave{display:flex;gap:3px;height:26px;align-items:flex-end}
+  .savg-c2c-wave span{display:block;width:4px;background:#2ecc71;border-radius:2px;animation:savgPulse 1.2s ease-in-out infinite}
+  .savg-c2c-wave span:nth-child(2){animation-delay:.1s}
+  .savg-c2c-wave span:nth-child(3){animation-delay:.2s}
+  .savg-c2c-wave span:nth-child(4){animation-delay:.3s}
+  .savg-c2c-wave span:nth-child(5){animation-delay:.4s}
+  @keyframes savgPulse{0%{height:4px}50%{height:24px}100%{height:4px}}
+  .savg-c2c-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .savg-c2c-btn{padding:12px;border-radius:10px;border:1px solid #333;background:#1b1b1b;color:#fff;cursor:pointer}
+  .savg-c2c-btn:hover{background:#242424}
+  .savg-c2c-actions{display:flex;gap:10px}
+  .savg-c2c-danger{background:#d63031;border-color:#c23616}
+  .savg-c2c-muted{background:#444}
+  .savg-c2c-meta{opacity:.8;font-size:12px}
+  .savg-c2c-timer{font-variant-tabular-nums:tabular-nums}
+  `;
+  document.head.appendChild(style);
+}
+
+function formatDuration(ms: number): string {
+  const s = Math.floor(ms / 1000);
+  const mm = String(Math.floor(s / 60)).padStart(2, '0');
+  const ss = String(s % 60).padStart(2, '0');
+  return `${mm}:${ss}`;
+}
+
+function showOverlay(opts: { number: string; botLabel: string; onDTMF: (d: string) => void; onMuteToggle: () => void; onHangup: () => void; }): { startTimer: () => void; stop: () => void; setMuted: (m: boolean) => void } {
+  ensureOverlayStyles();
+  if (overlayRoot) overlayRoot.remove();
+  overlayRoot = document.createElement('div');
+  overlayRoot.className = 'savg-c2c-overlay';
+  overlayRoot.innerHTML = `
+    <div class="savg-c2c-card">
+      <div class="savg-c2c-title">
+        <div class="savg-c2c-row"><strong>Calling</strong><span class="savg-c2c-timer">00:00</span></div>
+        <div class="savg-c2c-meta">To: <span class="savg-c2c-number"></span></div>
+        <div class="savg-c2c-meta">Bot: <span class="savg-c2c-bot"></span></div>
+      </div>
+      <div class="savg-c2c-wave" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <div class="savg-c2c-keypad"></div>
+      <div class="savg-c2c-actions">
+        <button class="savg-c2c-btn savg-c2c-mute">Mute</button>
+        <button class="savg-c2c-btn savg-c2c-danger savg-c2c-hangup">End</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlayRoot);
+  (overlayRoot.querySelector('.savg-c2c-number') as HTMLElement).textContent = opts.number || 'Unknown';
+  (overlayRoot.querySelector('.savg-c2c-bot') as HTMLElement).textContent = opts.botLabel || 'Bot';
+  const keypad = overlayRoot.querySelector('.savg-c2c-keypad') as HTMLElement;
+  const keys = ['1','2','3','4','5','6','7','8','9','*','0','#'];
+  keys.forEach(k => {
+    const b = document.createElement('button');
+    b.className = 'savg-c2c-btn';
+    b.textContent = k;
+    b.addEventListener('click', () => opts.onDTMF(k));
+    keypad.appendChild(b);
+  });
+  const muteBtn = overlayRoot.querySelector('.savg-c2c-mute') as HTMLButtonElement;
+  muteBtn.addEventListener('click', () => opts.onMuteToggle());
+  const endBtn = overlayRoot.querySelector('.savg-c2c-hangup') as HTMLButtonElement;
+  endBtn.addEventListener('click', () => opts.onHangup());
+
+  const timerEl = overlayRoot.querySelector('.savg-c2c-timer') as HTMLElement;
+  const startTimer = () => {
+    overlayStartTs = Date.now();
+    if (overlayTimerId) window.clearInterval(overlayTimerId);
+    overlayTimerId = window.setInterval(() => {
+      if (overlayStartTs != null) timerEl.textContent = formatDuration(Date.now() - overlayStartTs);
+    }, 500) as unknown as number;
+  };
+  const stop = () => {
+    if (overlayTimerId) window.clearInterval(overlayTimerId);
+    overlayTimerId = null; overlayStartTs = null; overlayMuted = false;
+    if (overlayRoot) { overlayRoot.remove(); overlayRoot = null; }
+  };
+  const setMuted = (m: boolean) => {
+    overlayMuted = m;
+    muteBtn.textContent = m ? 'Unmute' : 'Mute';
+    muteBtn.classList.toggle('savg-c2c-muted', m);
+  };
+  return { startTimer, stop, setMuted };
+}
 
 function normalizeDatasetValue(dataset: DOMStringMap, key: string): string | undefined {
   const variants = [key, key.toLowerCase(), key.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase()), key.replace(/-/g, '')];
@@ -122,6 +220,8 @@ export function autoWireCallButtons(options?: AutoWireOptions) {
         client = createClient(config);
         clientCache.set(key, client);
       }
+      // Disable the call button during call flow
+      (btn as HTMLButtonElement).disabled = true;
       // Ensure output device if provided
       if (config.audio?.outputDeviceId) {
         await client.setOutputDevice(config.audio.outputDeviceId);
@@ -129,7 +229,30 @@ export function autoWireCallButtons(options?: AutoWireOptions) {
       // Register (no-op if already registered)
       await client.register();
       // Place call
-      await client.call({ to: to || undefined });
+      const dialingNumber = config.phoneNumber || '';
+      const botLabel = (btn.dataset.botName as string) || config.botId;
+      const ui = showOverlay({
+        number: dialingNumber,
+        botLabel,
+        onDTMF: (d) => {
+          try { active?.sendDTMF(d); } catch {}
+        },
+        onMuteToggle: () => {
+          overlayMuted = !overlayMuted;
+          if (overlayMuted) { try { active?.mute(); } catch {} } else { try { active?.unmute(); } catch {} }
+          ui.setMuted(overlayMuted);
+        },
+        onHangup: async () => { try { await active?.hangup(); } catch {} }
+      });
+
+      let active = await client.call({ to: to || undefined });
+      // Start timer on answer/confirm
+      try { active.on('accepted', () => ui.startTimer()); } catch {}
+      try { active.on('confirmed', () => ui.startTimer()); } catch {}
+      // Close UI and re-enable on end/fail
+      const cleanup = () => { ui.stop(); (btn as HTMLButtonElement).disabled = false; };
+      try { active.on('ended', cleanup); } catch {}
+      try { active.on('failed', cleanup); } catch {}
     } catch (e) {
       console.error('[SavgClick2Call] Call failed:', e);
     } finally {
