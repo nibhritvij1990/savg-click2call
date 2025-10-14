@@ -300,15 +300,10 @@ export function autoWireCallButtons(options?: AutoWireOptions) {
       }
       // Disable the call button during call flow
       (btn as HTMLButtonElement).disabled = true;
-      // Ensure output device if provided
-      if (config.audio?.outputDeviceId) {
-        await client.setOutputDevice(config.audio.outputDeviceId);
-      }
-      // Register (no-op if already registered)
-      await client.register();
-      // Place call
+      // Show dialer immediately in connecting state
       const dialingNumber = config.phoneNumber || '';
       const botLabel = (btn.dataset.botName as string) || config.botName || config.botId;
+      let active: any;
       const ui = showOverlay({
         number: dialingNumber,
         botLabel,
@@ -322,8 +317,14 @@ export function autoWireCallButtons(options?: AutoWireOptions) {
         },
         onHangup: async () => { try { await active?.hangup(); } catch {} }
       });
-
-      let active = await client.call({ to: to || undefined });
+      // Ensure output device if provided
+      if (config.audio?.outputDeviceId) {
+        await client.setOutputDevice(config.audio.outputDeviceId);
+      }
+      // Register (no-op if already registered)
+      await client.register();
+      // Place call
+      active = await client.call({ to: to || undefined });
       // Start timer on answer/confirm
       try { active.on('accepted', () => ui.startTimer()); } catch {}
       try { active.on('confirmed', () => ui.startTimer()); } catch {}
