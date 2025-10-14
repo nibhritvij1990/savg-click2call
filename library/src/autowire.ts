@@ -96,7 +96,7 @@ function showOverlay(opts: { number: string; botLabel: string; onDTMF: (d: strin
       <div class="savg-c2c-card-wrapper">
         <div class="savg-c2c-card">
           <div class="savg-c2c-title">
-            <div class="savg-c2c-meta"><span class="savg-c2c-timer">00:18</span></div>
+            <div class="savg-c2c-meta"><span class="savg-c2c-timer">--:--</span></div>
             <div class="savg-c2c-meta"><span class="savg-c2c-number">Connecting...</span></div>
             <div class="savg-c2c-meta"><span class="savg-c2c-bot">data-botName</span></div>
           </div>
@@ -236,6 +236,7 @@ function datasetToConfig(el: HTMLElement): { config?: ClientConfig; to?: string 
   const sbcWssUrl = addresses[0];
   const sipDomain = normalizeDatasetValue(d, 'domain');
   const botId = normalizeDatasetValue(d, 'botId') || normalizeDatasetValue(d, 'botid');
+  const botName = normalizeDatasetValue(d, 'botName') || normalizeDatasetValue(d, 'botname');
   const phoneNumber = normalizeDatasetValue(d, 'botPhoneNumber') || normalizeDatasetValue(d, 'botphonenumber');
   const context = normalizeDatasetValue(d, 'ctcContext') || normalizeDatasetValue(d, 'ctccontext');
   const iceServersRaw = normalizeDatasetValue(d, 'iceServers');
@@ -255,6 +256,7 @@ function datasetToConfig(el: HTMLElement): { config?: ClientConfig; to?: string 
     sipDomain,
     iceServers,
     displayName,
+    botName,
     botId,
     phoneNumber,
     context,
@@ -302,7 +304,7 @@ export function autoWireCallButtons(options?: AutoWireOptions) {
       await client.register();
       // Place call
       const dialingNumber = config.phoneNumber || '';
-      const botLabel = (btn.dataset.botName as string) || config.botId;
+      const botLabel = (btn.dataset.botName as string) || config.botName || config.botId;
       const ui = showOverlay({
         number: dialingNumber,
         botLabel,

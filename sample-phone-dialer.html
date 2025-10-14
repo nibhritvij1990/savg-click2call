@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Phone Dialer</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#F9685B", // A shade of red for the end call button
+            "background-light": "#F5F5F5",
+            "background-dark": "#1C1C1E",
+            "surface-light": "#FFFFFF",
+            "surface-dark": "#2C2C2E",
+            "text-light": "#1C1C1E",
+            "text-dark": "#E5E5E5",
+            "text-secondary-light": "#636366",
+            "text-secondary-dark": "#AEAEB2",
+            "button-light": "#E5E5E5",
+            "button-dark": "#3A3A3C"
+          },
+          fontFamily: {
+            display: ["Roboto", "sans-serif"],
+          },
+          borderRadius: {
+            'DEFAULT': '1.5rem',
+            'full': '9999px',
+            'xl': '1.5rem',
+          },
+        },
+      },
+    };
+  </script>
+<style>
+    .material-icons {
+      font-family: 'Material Icons';
+      font-weight: normal;
+      font-style: normal;
+      font-size: 24px;
+      display: inline-block;
+      line-height: 1;
+      text-transform: none;
+      letter-spacing: normal;
+      word-wrap: normal;
+      white-space: nowrap;
+      direction: ltr;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+    .waveform-bar {
+        animation: waveform 1.5s ease-in-out infinite;
+    }
+    @keyframes waveform {
+        0%, 100% { transform: scaleY(0.2); }
+        50% { transform: scaleY(1); }
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-dark font-display">
+<div class="h-screen flex flex-col">
+<div class="pt-8 pb-4 flex-shrink-0">
+<div class="flex items-center justify-center space-x-2 text-text-secondary-dark">
+<span class="material-icons text-sm">wifi</span>
+<p class="text-sm">02:39</p>
+</div>
+<h1 class="text-4xl font-light mt-2 text-text-dark text-center">+1 234 567 8900</h1>
+<p class="text-sm text-text-secondary-dark mt-1 text-center">Kore.ai Virtual Assistant</p>
+</div>
+<div class="flex-grow flex items-center justify-center px-8">
+<div class="flex items-center justify-center space-x-1.5 h-24 w-full">
+<div class="waveform-bar w-1.5 bg-primary rounded-full" style="animation-delay: -0.9s; height: 30%;"></div>
+<div class="waveform-bar w-1.5 bg-primary rounded-full" style="animation-delay: -0.6s; height: 80%;"></div>
+<div class="waveform-bar w-1.5 bg-primary rounded-full" style="animation-delay: -0.3s; height: 50%;"></div>
+<div class="waveform-bar w-1.5 bg-primary rounded-full" style="animation-delay: -0.8s; height: 90%;"></div>
+<div class="waveform-bar w-1.5 bg-primary rounded-full" style="animation-delay: -0.5s; height: 40%;"></div>
+<div class="waveform-bar w-1.5 bg-primary rounded-full" style="animation-delay: -0.2s; height: 70%;"></div>
+<div class="waveform-bar w-1.5 bg-primary rounded-full" style="animation-delay: -0.7s; height: 60%;"></div>
+<div class="waveform-bar w-1.5 bg-primary rounded-full" style="animation-delay: -0.4s; height: 100%;"></div>
+<div class="waveform-bar w-1.5 bg-primary rounded-full" style="animation-delay: -0.1s; height: 30%;"></div>
+<div class="waveform-bar w-1.5 bg-primary rounded-full" style="animation-delay: -0.9s; height: 80%;"></div>
+<div class="waveform-bar w-1.5 bg-primary rounded-full" style="animation-delay: -0.6s; height: 50%;"></div>
+<div class="waveform-bar w-1.5 bg-primary rounded-full" style="animation-delay: -0.3s; height: 90%;"></div>
+<div class="waveform-bar w-1.5 bg-primary rounded-full" style="animation-delay: -0.8s; height: 40%;"></div>
+<div class="waveform-bar w-1.5 bg-primary rounded-full" style="animation-delay: -0.5s; height: 70%;"></div>
+<div class="waveform-bar w-1.5 bg-primary rounded-full" style="animation-delay: -0.2s; height: 60%;"></div>
+<div class="waveform-bar w-1.5 bg-primary rounded-full" style="animation-delay: -0.7s; height: 100%;"></div>
+<div class="waveform-bar w-1.5 bg-primary rounded-full" style="animation-delay: -0.4s; height: 30%;"></div>
+<div class="waveform-bar w-1.5 bg-primary rounded-full" style="animation-delay: -0.1s; height: 80%;"></div>
+<div class="waveform-bar w-1.5 bg-primary rounded-full" style="animation-delay: -0.9s; height: 50%;"></div>
+<div class="waveform-bar w-1.5 bg-primary rounded-full" style="animation-delay: -0.6s; height: 90%;"></div>
+<div class="waveform-bar w-1.5 bg-primary rounded-full" style="animation-delay: -0.3s; height: 40%;"></div>
+<div class="waveform-bar w-1.5 bg-primary rounded-full" style="animation-delay: -0.8s; height: 70%;"></div>
+<div class="waveform-bar w-1.5 bg-primary rounded-full" style="animation-delay: -0.5s; height: 60%;"></div>
+<div class="waveform-bar w-1.5 bg-primary rounded-full" style="animation-delay: -0.2s; height: 100%;"></div>
+</div>
+</div>
+<div class="flex-grow-0 flex flex-col justify-end">
+<div class="bg-surface-dark rounded-t-3xl p-4 flex flex-col justify-center" style="min-height: 60vh;">
+<div class="grid grid-cols-3 gap-3 mb-4">
+<div class="flex flex-col items-center justify-center h-16 bg-button-dark rounded-full cursor-pointer">
+<span class="text-2xl font-light text-text-dark">1</span>
+<span class="text-xs text-text-secondary-dark"> </span>
+</div>
+<div class="flex flex-col items-center justify-center h-16 bg-button-dark rounded-full cursor-pointer">
+<span class="text-2xl font-light text-text-dark">2</span>
+<span class="text-xs tracking-widest text-text-secondary-dark">ABC</span>
+</div>
+<div class="flex flex-col items-center justify-center h-16 bg-button-dark rounded-full cursor-pointer">
+<span class="text-2xl font-light text-text-dark">3</span>
+<span class="text-xs tracking-widest text-text-secondary-dark">DEF</span>
+</div>
+<div class="flex flex-col items-center justify-center h-16 bg-button-dark rounded-full cursor-pointer">
+<span class="text-2xl font-light text-text-dark">4</span>
+<span class="text-xs tracking-widest text-text-secondary-dark">GHI</span>
+</div>
+<div class="flex flex-col items-center justify-center h-16 bg-button-dark rounded-full cursor-pointer">
+<span class="text-2xl font-light text-text-dark">5</span>
+<span class="text-xs tracking-widest text-text-secondary-dark">JKL</span>
+</div>
+<div class="flex flex-col items-center justify-center h-16 bg-button-dark rounded-full cursor-pointer">
+<span class="text-2xl font-light text-text-dark">6</span>
+<span class="text-xs tracking-widest text-text-secondary-dark">MNO</span>
+</div>
+<div class="flex flex-col items-center justify-center h-16 bg-button-dark rounded-full cursor-pointer">
+<span class="text-2xl font-light text-text-dark">7</span>
+<span class="text-xs tracking-widest text-text-secondary-dark">PQRS</span>
+</div>
+<div class="flex flex-col items-center justify-center h-16 bg-button-dark rounded-full cursor-pointer">
+<span class="text-2xl font-light text-text-dark">8</span>
+<span class="text-xs tracking-widest text-text-secondary-dark">TUV</span>
+</div>
+<div class="flex flex-col items-center justify-center h-16 bg-button-dark rounded-full cursor-pointer">
+<span class="text-2xl font-light text-text-dark">9</span>
+<span class="text-xs tracking-widest text-text-secondary-dark">WXYZ</span>
+</div>
+<div class="flex flex-col items-center justify-center h-16 bg-button-dark rounded-full cursor-pointer">
+<span class="text-2xl font-light text-text-dark">*</span>
+</div>
+<div class="flex flex-col items-center justify-center h-16 bg-button-dark rounded-full cursor-pointer">
+<span class="text-2xl font-light text-text-dark">0</span>
+<span class="text-xs tracking-widest text-text-secondary-dark">+</span>
+</div>
+<div class="flex flex-col items-center justify-center h-16 bg-button-dark rounded-full cursor-pointer">
+<span class="text-2xl font-light text-text-dark">#</span>
+</div>
+</div>
+<div class="flex justify-center items-center space-x-4 mb-4">
+<div class="flex flex-col items-center space-y-1">
+<button class="w-14 h-14 bg-button-dark rounded-full flex items-center justify-center">
+<span class="material-icons text-text-dark">mic_off</span>
+</button>
+<span class="text-xs text-text-dark">Mute</span>
+</div>
+<div class="flex flex-col items-center space-y-1">
+<button class="w-14 h-14 bg-button-dark rounded-full flex items-center justify-center">
+<span class="material-icons text-text-dark">volume_up</span>
+</button>
+<span class="text-xs text-text-dark">Speaker</span>
+</div>
+</div>
+<div class="flex justify-center">
+<button class="bg-primary text-white w-40 h-14 rounded-full flex items-center justify-center">
+<span class="material-icons text-3xl">call_end</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</body></html>

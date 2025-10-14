@@ -3,6 +3,7 @@ export type ClientConfig = {
   sipDomain: string;
   iceServers: RTCIceServer[];
   displayName?: string;
+  botName?: string;
   botId: string;
   phoneNumber: string;
   context?: string;
