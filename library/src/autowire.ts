@@ -35,7 +35,7 @@ function ensureOverlayStyles() {
   .savg-c2c-danger{background:#d63031;border-color:#c23616}
   .savg-c2c-muted{background:#444}
   .savg-c2c-meta{opacity:.8;font-size:12px}
-  .savg-c2c-timer{font-variant-tabular-nums:tabular-nums}
+  .savg-c2c-timer{font-feature-settings:"tnum" 1}
   `;
   document.head.appendChild(style);
 }
