@@ -3,9 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>SAVG Click2Call</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <title>SAVG Click2Call - Local Dialer</title>
     <style>
-      * {box-sizing: border-box;}
+      * { box-sizing: border-box; }
       body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 2rem; }
       button { padding: .6rem 1rem; }
     </style>
@@ -22,12 +23,16 @@
       Click 2 Call
     </button>
 
-    <script src="https://savg-click2call.netlify.app/ac_webrtc.min.js"></script>
-    <script src="https://savg-click2call.netlify.app/click2call.umd.js"></script>
+    <!-- Local AudioCodes SDK from repo root served by Vite -->
+    <script src="/ac_webrtc.min.js"></script>
+    <!-- Use local UMD bundle for stability during dev -->
+    <script src="/click2call.umd.js"></script>
     <script>
       window.addEventListener('DOMContentLoaded', () => {
         window.SavgClick2Call.autoWireCallButtons();
       });
     </script>
   </body>
-</html>
+  </html>
+
+

@@ -11,33 +11,38 @@ let overlayRoot: HTMLElement | null = null;
 let overlayTimerId: number | null = null;
 let overlayStartTs: number | null = null;
 let overlayMuted = false;
+let analyserRAF: number | null = null;
 
 function ensureOverlayStyles() {
   if (document.getElementById('savg-c2c-styles')) return;
   const style = document.createElement('style');
   style.id = 'savg-c2c-styles';
   style.textContent = `
-  .savg-c2c-overlay { position: fixed; inset: 5svh 15svw; display: flex; align-items: center; justify-content: center; z-index: 99999; }
+  .savg-c2c-overlay { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); height: min(98svh, 1000px); width: min(98svw, 800px); display: flex; align-items: center; justify-content: center; z-index: 99999; }
   .savg-c2c-card-wrapper { width: 404px; height: 862px; position: relative; z-index: 1; }
   .savg-c2c-card { background: #1c1c1e; color: #e5e5e5; border-radius: 24px; height: 862px; width: 400px; margin: 0 2px; padding: 80px 0 0 0; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; box-shadow: inset 0 0 12px #8d8d86, inset 0 7px 0 3px #1077d7, inset 0 -6px 0 3px #1077d7; }
+  .savg-c2c-card-wrapper{ will-change: transform, filter; transform-origin: center; }
+  .savg-c2c-card-wrapper.crt-enter{ animation: savgCrtIn 320ms ease-out forwards; }
+  .savg-c2c-card-wrapper.crt-exit{ animation: savgCrtOut 280ms ease-in forwards; }
+  @keyframes savgCrtIn{ 0%{ transform: scaleX(0) scaleY(0); filter: brightness(.7);} 50%{ transform: scaleX(1) scaleY(.02);} 100%{ transform: scaleX(1) scaleY(1); filter:none;} }
+  @keyframes savgCrtOut{ 0%{ transform: scaleX(1) scaleY(1);} 50%{ transform: scaleX(1) scaleY(.02);} 100%{ transform: scaleX(0) scaleY(0);} }
   .savg-c2c-title { display: flex; flex-direction: column; gap: 6px; }
   .savg-c2c-meta { display: flex; align-items: center; justify-content: center; }
   .savg-c2c-timer { font-feature-settings: "tnum" 1; font-size: 16px; }
   .savg-c2c-number { font-size: 32px; }
   .savg-c2c-bot { font-size: 14px; }
   .savg-c2c-wave { display: flex; gap: 4px; height: 64px; align-items: flex-end; justify-content: center; }
-  .savg-c2c-wave span { display: block; width: 8px; background: #2ecc71; border-radius: 2px; animation: savgPulse 1.2s ease-in-out infinite; }
-  .savg-c2c-wave span:nth-child(2) { animation-delay: .1s; }
-  .savg-c2c-wave span:nth-child(3) { animation-delay: .2s; }
-  .savg-c2c-wave span:nth-child(4) { animation-delay: .3s; }
-  .savg-c2c-wave span:nth-child(5) { animation-delay: .4s; }
-  @keyframes savgPulse { 0% { height: 4px; } 50% { height: 64px; } 100% { height: 4px; } }
+  .savg-c2c-wave span { display: block; width: 8px; background: #2ecc71; border-radius: 2px; animation: savgPulse 1.2s ease-in-out; min-height: 4px; }
+  .savg-c2c-wave span:nth-child(odd){ background:#4da3ff; }
+  .savg-c2c-wave span:nth-child(even){ background:#2ecc71; }
+  @keyframes savgPulse { 0% { height: 64px; } 100% { height: 4px; } }
   .savg-c2c-keypad-wrapper { background: #2c2c2e; padding: 40px 20px 80px 20px; border-radius: 24px; margin: 0 3px 9px 3px; display: flex; flex-direction: column; gap: 16px; }
   .savg-c2c-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
   .savg-c2c-btn { padding: 8px; border-radius: 1000px; border: 1px solid #3a3a3c; background: #3a3a3c; color: #e3e3e3; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
   .savg-c2c-btn .n { font-size: 16px; }
   .savg-c2c-btn .l { font-size: 12px; opacity: 0.5; }
   .savg-c2c-btn:hover { background: #242424; }
+  .savg-c2c-btn:not(.savg-c2c-hangup):active { background: #999; color: #3a3a3c; border-radius: 16px; }
   .savg-c2c-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
   .savg-c2c-mute, .savg-c2c-hangup { padding: 16px; font-size: 20px; }
   .savg-c2c-danger { background: #c23616; border-color: #c23616; grid-column: 2 / 4; }
@@ -89,50 +94,50 @@ function showOverlay(opts: { number: string; botLabel: string; onDTMF: (d: strin
   overlayRoot = document.createElement('div');
   overlayRoot.className = 'savg-c2c-overlay';
   overlayRoot.innerHTML = `
-    <div class="savg-c2c-overlay">
-      <div class="liquidGlass-effect"></div>
-      <div class="liquidGlass-tint"></div>
-      <div class="liquidGlass-shine"></div>
-      <div class="liquidGlass-text">
-      <div class="savg-c2c-card-wrapper">
-        <div class="savg-c2c-card">
-          <div class="savg-c2c-title">
-            <div class="savg-c2c-meta"><span class="savg-c2c-timer">--:--</span></div>
-            <div class="savg-c2c-meta"><span class="savg-c2c-number">Connecting...</span></div>
-            <div class="savg-c2c-meta"><span class="savg-c2c-bot">data-botName</span></div>
-          </div>
-          <div class="savg-c2c-wave" aria-hidden="true">
-            <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
-          </div>
-          <div class="savg-c2c-keypad-wrapper">
-            <div class="savg-c2c-keypad">
-              <button class="savg-c2c-btn" data-key="1"><span class="n">1</span></button>
-              <button class="savg-c2c-btn" data-key="2"><span class="n">2</span><span class="l">ABC</span></button>
-              <button class="savg-c2c-btn" data-key="3"><span class="n">3</span><span class="l">DEF</span></button>
-              <button class="savg-c2c-btn" data-key="4"><span class="n">4</span><span class="l">GHI</span></button>
-              <button class="savg-c2c-btn" data-key="5"><span class="n">5</span><span class="l">JKL</span></button>
-              <button class="savg-c2c-btn" data-key="6"><span class="n">6</span><span class="l">MNO</span></button>
-              <button class="savg-c2c-btn" data-key="7"><span class="n">7</span><span class="l">PQRS</span></button>
-              <button class="savg-c2c-btn" data-key="8"><span class="n">8</span><span class="l">TUV</span></button>
-              <button class="savg-c2c-btn" data-key="9"><span class="n">9</span><span class="l">WXYZ</span></button>
-              <button class="savg-c2c-btn" data-key="*"><span class="n">*</span></button>
-              <button class="savg-c2c-btn" data-key="0"><span class="n">0</span><span class="l">+</span></button>
-              <button class="savg-c2c-btn" data-key="#"><span class="n">#</span></button>
-              </div>
-              <div class="savg-c2c-actions">
-                <button id="btnMute" class="control savg-c2c-btn savg-c2c-mute" title="Mute/Unmute" aria-label="Mute/Unmute"><i class="bi bi-mic" aria-hidden="true"></i></button>
-                <button id="btnEnd" class="hangup savg-c2c-btn savg-c2c-danger savg-c2c-hangup" title="End Call" aria-label="End call"><i class="bi bi-telephone-x" aria-hidden="true"></i></button>
-              </div>
+    <div class="liquidGlass-effect"></div>
+    <div class="liquidGlass-tint"></div>
+    <div class="liquidGlass-shine"></div>
+    <div class="liquidGlass-text">
+    <div class="savg-c2c-card-wrapper">
+      <div class="savg-c2c-card">
+        <div class="savg-c2c-title">
+          <div class="savg-c2c-meta"><span class="savg-c2c-timer">connecting...</span></div>
+          <div class="savg-c2c-meta"><span class="savg-c2c-number">data-botPhoneNumber</span></div>
+          <div class="savg-c2c-meta"><span class="savg-c2c-bot">data-botName</span></div>
+        </div>
+        <div class="savg-c2c-wave" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="savg-c2c-keypad-wrapper">
+          <div class="savg-c2c-keypad">
+            <button class="savg-c2c-btn" data-key="1"><span class="n">1</span></button>
+            <button class="savg-c2c-btn" data-key="2"><span class="n">2</span><span class="l">ABC</span></button>
+            <button class="savg-c2c-btn" data-key="3"><span class="n">3</span><span class="l">DEF</span></button>
+            <button class="savg-c2c-btn" data-key="4"><span class="n">4</span><span class="l">GHI</span></button>
+            <button class="savg-c2c-btn" data-key="5"><span class="n">5</span><span class="l">JKL</span></button>
+            <button class="savg-c2c-btn" data-key="6"><span class="n">6</span><span class="l">MNO</span></button>
+            <button class="savg-c2c-btn" data-key="7"><span class="n">7</span><span class="l">PQRS</span></button>
+            <button class="savg-c2c-btn" data-key="8"><span class="n">8</span><span class="l">TUV</span></button>
+            <button class="savg-c2c-btn" data-key="9"><span class="n">9</span><span class="l">WXYZ</span></button>
+            <button class="savg-c2c-btn" data-key="*"><span class="n">*</span></button>
+            <button class="savg-c2c-btn" data-key="0"><span class="n">0</span><span class="l">+</span></button>
+            <button class="savg-c2c-btn" data-key="#"><span class="n">#</span></button>
+            </div>
+            <div class="savg-c2c-actions">
+              <button id="btnMute" class="control savg-c2c-btn savg-c2c-mute" title="Mute/Unmute" aria-label="Mute/Unmute"><i class="bi bi-mic" aria-hidden="true"></i></button>
+              <button id="btnEnd" class="hangup savg-c2c-btn savg-c2c-danger savg-c2c-hangup" title="End Call" aria-label="End call"><i class="bi bi-telephone-x" aria-hidden="true"></i></button>
             </div>
           </div>
-          <div class="device-stripe"></div>
-          <div class="device-header"></div>
-          <div class="device-sensors"></div>
-          <div class="device-btns"></div>
-          <div class="device-power"></div>
         </div>
+        <div class="device-stripe"></div>
+        <div class="device-header"></div>
+        <div class="device-sensors"></div>
+        <div class="device-btns"></div>
+        <div class="device-power"></div>
       </div>
     </div>
+
     <svg style="display: none">
       <filter id="glass-distortion" x="0%" y="0%" width="100%" height="100%" filterUnits="objectBoundingBox">
         <feTurbulence type="fractalNoise" baseFrequency="0.01 0.01" numOctaves="1" seed="5" result="turbulence" />
@@ -152,11 +157,64 @@ function showOverlay(opts: { number: string; botLabel: string; onDTMF: (d: strin
   document.body.appendChild(overlayRoot);
   (overlayRoot.querySelector('.savg-c2c-number') as HTMLElement).textContent = opts.number || 'Unknown';
   (overlayRoot.querySelector('.savg-c2c-bot') as HTMLElement).textContent = opts.botLabel || 'Bot';
+  // CRT open animation
+  const cardEl = overlayRoot.querySelector('.savg-c2c-card-wrapper') as HTMLElement | null;
+  if (cardEl) {
+    cardEl.classList.add('crt-enter');
+    cardEl.addEventListener('animationend', () => {
+      cardEl.classList.remove('crt-enter');
+    }, { once: true });
+  }
+
+  // Dynamic scale: keep card visible within viewport without conflicting with CRT animation
+  const scaleHost = overlayRoot.querySelector('.liquidGlass-text') as HTMLElement | null;
+  const baseW = 404; // design width
+  const baseH = 862; // design height
+  const applyScale = () => {
+    if (!scaleHost) return;
+    const vw = Math.max(1, window.innerWidth);
+    const vh = Math.max(1, window.innerHeight);
+    const s = Math.min(vw / baseW, vh / baseH, 1);
+    scaleHost.style.transform = `scale(${(s==1?s:0.95*s)})`;
+    scaleHost.style.transformOrigin = 'center';
+  };
+  applyScale();
+  const onResize = () => applyScale();
+  window.addEventListener('resize', onResize);
   
   const muteBtn = overlayRoot.querySelector('.savg-c2c-mute') as HTMLButtonElement;
   muteBtn.addEventListener('click', () => opts.onMuteToggle());
   const endBtn = overlayRoot.querySelector('.savg-c2c-hangup') as HTMLButtonElement;
   endBtn.addEventListener('click', () => opts.onHangup());
+  // Keypad DTMF feedback tones
+  const keypad = overlayRoot.querySelector('.savg-c2c-keypad') as HTMLElement;
+  keypad.querySelectorAll('.savg-c2c-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const k = (btn as HTMLElement).getAttribute('data-key') || (btn as HTMLElement).textContent || '';
+      const map: Record<string, [number, number]> = {
+        '1': [697, 1209], '2': [697, 1336], '3': [697, 1477],
+        '4': [770, 1209], '5': [770, 1336], '6': [770, 1477],
+        '7': [852, 1209], '8': [852, 1336], '9': [852, 1477],
+        '*': [941, 1209], '0': [941, 1336], '#': [941, 1477]
+      };
+      const f = map[k.trim()];
+      if (f) {
+        try {
+          const AC: any = (window as any).AudioContext || (window as any).webkitAudioContext;
+          const ctx = new AC();
+          const g = ctx.createGain(); g.gain.value = 0.0001; g.connect(ctx.destination);
+          const o1 = ctx.createOscillator(); o1.type = 'sine'; o1.frequency.value = f[0]; o1.connect(g);
+          const o2 = ctx.createOscillator(); o2.type = 'sine'; o2.frequency.value = f[1]; o2.connect(g);
+          const now = ctx.currentTime;
+          g.gain.exponentialRampToValueAtTime(0.2, now + 0.01);
+          o1.start(now); o2.start(now);
+          g.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
+          o1.stop(now + 0.16); o2.stop(now + 0.16);
+          setTimeout(() => { try { ctx.close(); } catch {} }, 220);
+        } catch {}
+      }
+    });
+  });
 
   const timerEl = overlayRoot.querySelector('.savg-c2c-timer') as HTMLElement;
   const startTimer = () => {
@@ -169,7 +227,20 @@ function showOverlay(opts: { number: string; botLabel: string; onDTMF: (d: strin
   const stop = () => {
     if (overlayTimerId) window.clearInterval(overlayTimerId);
     overlayTimerId = null; overlayStartTs = null; overlayMuted = false;
-    if (overlayRoot) { overlayRoot.remove(); overlayRoot = null; }
+    if (analyserRAF) { cancelAnimationFrame(analyserRAF); analyserRAF = null; }
+    const doRemove = () => { if (overlayRoot) { overlayRoot.remove(); overlayRoot = null; } };
+    // CRT close animation
+    const card = overlayRoot?.querySelector('.savg-c2c-card-wrapper') as HTMLElement | null;
+    if (card) {
+      card.classList.add('crt-exit');
+      let removed = false;
+      card.addEventListener('animationend', () => { if (!removed) { removed = true; doRemove(); } }, { once: true });
+      // Fallback in case animation events are blocked
+      setTimeout(() => { if (!removed) { removed = true; doRemove(); } }, 400);
+    } else {
+      doRemove();
+    }
+    window.removeEventListener('resize', onResize);
   };
   const setMuted = (m: boolean) => {
     overlayMuted = m;
@@ -325,9 +396,105 @@ export function autoWireCallButtons(options?: AutoWireOptions) {
       await client.register();
       // Place call
       active = await client.call({ to: to || undefined });
-      // Start timer on answer/confirm
-      try { active.on('accepted', () => ui.startTimer()); } catch {}
-      try { active.on('confirmed', () => ui.startTimer()); } catch {}
+      // Start timer on answer/confirm and attach audio analyser for waveform (after media is flowing)
+      const tryStartAnalyser = async () => {
+        const remoteEl = document.getElementById('savg-c2c-remote-audio') as HTMLAudioElement | null;
+        const barsNode = overlayRoot?.querySelectorAll('.savg-c2c-wave span') || null;
+        const bars: HTMLElement[] | null = barsNode ? Array.from(barsNode) as HTMLElement[] : null;
+        // Wait briefly if stream is not yet attached
+        let stream: MediaStream | null = null;
+        const maxWait = 100; // ~5s total
+        for (let i = 0; i < maxWait; i++) {
+          if (remoteEl && remoteEl.srcObject instanceof MediaStream) { stream = remoteEl.srcObject as MediaStream; break; }
+          await new Promise(r => setTimeout(r, 50));
+        }
+        if (!stream || !bars || !bars.length) return;
+        // Disable CSS animation when reactive
+        bars.forEach((b) => { b.style.animation = 'none'; (b as HTMLElement).style.animationName = 'none'; });
+        const AC: any = (window as any).AudioContext || (window as any).webkitAudioContext;
+        if (!AC) return;
+        const ac = new AC();
+        const src = ac.createMediaStreamSource(stream);
+        const analyser = ac.createAnalyser();
+        analyser.fftSize = 256;
+        analyser.smoothingTimeConstant = 0.7;
+        src.connect(analyser);
+        const dataF = new Uint8Array(analyser.frequencyBinCount);
+        const dataT = new Uint8Array(analyser.fftSize);
+        const evenBuckets = [2, 5, 8, 11, 14, 17];
+        const oddBuckets  = [3, 6, 9, 12, 15, 18];
+        const render = () => {
+          analyser.getByteFrequencyData(dataF);
+          // If frequency data is near-zero (silence or codec), fall back to time-domain RMS
+          let avg = 0;
+          const sampleIdx = [...evenBuckets, ...oddBuckets].slice(0, bars.length);
+          for (let i = 0; i < sampleIdx.length; i++) avg += dataF[sampleIdx[i]];
+          const useTime = avg < sampleIdx.length * 4; // threshold
+          if (useTime) analyser.getByteTimeDomainData(dataT);
+          bars.forEach((bar, i) => {
+            const isOdd = (i % 2) === 1; // odd = mic, even = remote
+            const idx = (isOdd ? oddBuckets[Math.floor(i/2)] : evenBuckets[Math.floor(i/2)]) || 2;
+            const v = useTime ? Math.abs((dataT[(i * 16) % dataT.length] - 128) / 128) : (dataF[idx] / 255);
+            const h = Math.max(4, Math.floor(v * 64));
+            bar.style.height = `${h}px`;
+          });
+          analyserRAF = requestAnimationFrame(render);
+        };
+        try { await ac.resume(); } catch {}
+        render();
+        const cleanupAnalyser = () => { if (analyserRAF) { cancelAnimationFrame(analyserRAF); analyserRAF = null; } try { ac.close(); } catch {} };
+        try { active.on('ended', cleanupAnalyser); } catch {}
+        try { active.on('failed', cleanupAnalyser); } catch {}
+
+        // Start MIC analyser on odd bars (fallback via getUserMedia)
+        try {
+          const micBars = bars.filter((_, i) => (i % 2) === 1);
+          if (micBars.length) {
+            const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const ACmic: any = (window as any).AudioContext || (window as any).webkitAudioContext;
+            const acMic = new ACmic();
+            const srcMic = acMic.createMediaStreamSource(micStream);
+            const analyserMic = acMic.createAnalyser();
+            analyserMic.fftSize = 256;
+            analyserMic.smoothingTimeConstant = 0.8;
+            srcMic.connect(analyserMic);
+            const micF = new Uint8Array(analyserMic.frequencyBinCount);
+            const micT = new Uint8Array(analyserMic.fftSize);
+            let micRAF: number | null = null;
+            const micBuckets = [3, 6, 9, 12, 15, 18];
+            const renderMic = () => {
+              if (overlayMuted) {
+                micBars.forEach((bar) => { bar.style.height = '4px'; });
+                micRAF = requestAnimationFrame(renderMic);
+                return;
+              }
+              analyserMic.getByteFrequencyData(micF);
+              let avgMic = 0;
+              for (let i = 0; i < micBars.length; i++) avgMic += micF[micBuckets[i] || 3];
+              const useTimeMic = avgMic < micBars.length * 4;
+              if (useTimeMic) analyserMic.getByteTimeDomainData(micT);
+              micBars.forEach((bar, i) => {
+                const idx = micBuckets[i] || 3;
+                const v = useTimeMic ? Math.abs((micT[(i * 16) % micT.length] - 128) / 128) : (micF[idx] / 255);
+                const h = Math.max(4, Math.floor(v * 64));
+                bar.style.height = `${h}px`;
+              });
+              micRAF = requestAnimationFrame(renderMic);
+            };
+            try { await acMic.resume(); } catch {}
+            renderMic();
+            const cleanupMic = () => {
+              if (micRAF) { cancelAnimationFrame(micRAF); micRAF = null; }
+              try { acMic.close(); } catch {}
+              try { micStream.getTracks().forEach(t => t.stop()); } catch {}
+            };
+            try { active.on('ended', cleanupMic); } catch {}
+            try { active.on('failed', cleanupMic); } catch {}
+          }
+        } catch {}
+      };
+      try { active.on('accepted', () => { ui.startTimer(); tryStartAnalyser(); }); } catch {}
+      try { active.on('confirmed', () => { ui.startTimer(); tryStartAnalyser(); }); } catch {}
       // Close UI and re-enable on end/fail
       const cleanup = () => { ui.stop(); (btn as HTMLButtonElement).disabled = false; };
       try { active.on('ended', cleanup); } catch {}

@@ -45,6 +45,7 @@ export class AudioCodesClient implements Client {
     // @ts-ignore playsInline is supported in browsers for inline playback
     el.playsInline = true;
     el.style.display = 'none';
+    el.id = 'savg-c2c-remote-audio';
     document.body.appendChild(el);
     this.remoteAudioEl = el;
     return el;
