@@ -63,6 +63,9 @@ function ensureOverlayStyles() {
   .liquidGlass-tint { z-index: 1; position: absolute; inset: 0; background: rgba(255, 255, 255, 0.25); border-radius: inherit; }
   .liquidGlass-shine { position: absolute; inset: 0; z-index: 2; overflow: hidden; box-shadow: inset 2px 2px 1px 0 rgba(255, 255, 255, 0.5), inset -1px -1px 1px 1px rgba(255, 255, 255, 0.5); border-radius: inherit; }
   .liquidGlass-text { z-index: 3; position: relative; border-radius: inherit; }
+
+  .liquidGlass-effect, .liquidGlass-tint, .liquidGlass-shine { display: none; }
+  .savg-c2c-overlay { box-shadow: none; border-radius: 0; backdrop-filter: blur(4px); height: 100svh; width: 100svw; transform: none; inset: 0;}
   `;
   document.head.appendChild(style);
 }
